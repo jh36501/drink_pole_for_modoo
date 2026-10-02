@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PollConfig, DateVoteSummary } from '../types';
 import { formatDateKorean, getDayOfWeekKorean, getDaysInWeek } from '../utils/dateUtils';
 import { 
@@ -40,6 +40,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [confirmedTimeLocation, setConfirmedTimeLocation] = useState(config.confirmedTimeLocation);
   const [candidateDates, setCandidateDates] = useState<string[]>(config.candidateDates);
   const [confirmedDate, setConfirmedDate] = useState<string | null>(config.confirmedDate);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTitle(config.title);
+      setDescription(config.description);
+      setOrganizer(config.organizer);
+      setDeadline(config.deadline);
+      setConfirmedTimeLocation(config.confirmedTimeLocation);
+      setCandidateDates(config.candidateDates);
+      setConfirmedDate(config.confirmedDate);
+    }
+  }, [isOpen, config]);
 
   if (!isOpen) return null;
 

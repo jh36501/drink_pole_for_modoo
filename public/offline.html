@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>모두의 회식 - 팀 회식 일정 투표기 (내부망 전용)</title>
+  <style>
+    /* Reset & Base System Styles - Pure CSS, Zero External Dependencies */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    :root {
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-light: #e0f2fe;
+      --primary-dark: #075985;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-600: #475569;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+      --emerald-50: #ecfdf5;
+      --emerald-100: #d1fae5;
+      --emerald-200: #a7f3d0;
+      --emerald-600: #059669;
+      --emerald-700: #047857;
+      --emerald-800: #065f46;
+      --amber-50: #fffbeb;
+      --amber-100: #fef3c7;
+      --amber-200: #fde68a;
+      --amber-700: #b45309;
+      --amber-800: #92400e;
+      --rose-50: #fff1f2;
+      --rose-100: #ffe4e6;
+      --rose-600: #e11d48;
+      --rose-700: #be123c;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", Apple SD Gothic Neo, sans-serif;
+    }
+    body {
+      font-family: var(--font-family);
+      background-color: var(--slate-50);
+      color: var(--slate-900);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      background: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    input, select, textarea {
+      font-family: inherit;
+      border: 1px solid var(--slate-300);
+      border-radius: 8px;
+      padding: 8px 12px;
+      outline: none;
+      font-size: 14px;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.2);
+    }
+
+    /* Layout Containers */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 16px;
+      width: 100%;
+    }
+
+    /* Offline Notice Banner */
+    .offline-banner {
+      background: #0f172a;
+      color: #94a3b8;
+      font-size: 12px;
+      padding: 6px 16px;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-bottom: 1px solid #1e293b;
+    }
+    .offline-banner strong {
+      color: #38bdf8;
+    }
+    .offline-badge-pill {
+      background: #334155;
+      color: #f1f5f9;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-weight: 600;
+    }
+
+    /* Header & Navigation */
+    header {
+      background: rgba(255, 255, 255, 0.95);
+      border-bottom: 1px solid var(--slate-200);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 16px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .brand-text h1 {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--slate-900);
+    }
+    .brand-text span {
+      font-size: 11px;
+      color: var(--slate-500);
+      font-weight: 500;
+    }
+
+    /* Tab Switcher */
+    .view-tabs {
+      display: flex;
+      align-items: center;
+      background: var(--slate-100);
+      padding: 4px;
+      border-radius: 8px;
+      gap: 4px;
+    }
+    .tab-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 6px;
+      color: var(--slate-600);
+      gap: 6px;
+    }
+    .tab-btn.active {
+      background: #fff;
+      color: var(--slate-900);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    /* Header Actions */
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      padding: 8px;
+      color: var(--slate-600);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .icon-btn:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+    .role-toggle {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--slate-200);
+      background: var(--slate-100);
+      color: var(--slate-700);
+      gap: 6px;
+    }
+    .role-toggle.admin {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border-color: #bae6fd;
+    }
+    .vote-cta-btn {
+      background: var(--primary);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 8px;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.3);
+    }
+    .vote-cta-btn:hover {
+      background: var(--primary-hover);
+    }
+
+    /* Hero / Summary Section */
+    .hero-card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .hero-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .hero-title-area h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--slate-900);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .hero-desc {
+      font-size: 13px;
+      color: var(--slate-600);
+      margin-top: 6px;
+      max-width: 700px;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--slate-500);
+      margin-top: 10px;
+    }
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--slate-100);
+    }
+    .stat-box {
+      background: var(--slate-50);
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+    .stat-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--slate-500);
+      text-transform: uppercase;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--slate-900);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Main Section Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 24px 0 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .week-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-pill {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate-700);
+    }
+    .nav-pill:hover {
+      background: var(--slate-100);
+    }
+
+    /* Calendar Grid */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 1024px) {
+      .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    @media (max-width: 640px) {
+      .calendar-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .day-card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      min-height: 250px;
+    }
+    .day-card:hover {
+      border-color: var(--slate-300);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transform: translateY(-2px);
+    }
+    .day-card.is-candidate {
+      border-color: #38bdf8;
+      background: #f0f9ff;
+    }
+    .day-card.is-top {
+      border: 2px solid #0284c7;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+    }
+    .day-card.is-confirmed {
+      border: 2px solid #059669;
+      background: #f0fdf4;
+    }
+
+    .card-header {
+      padding: 12px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-date {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--slate-900);
+    }
+    .dow-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--slate-100);
+      color: var(--slate-700);
+    }
+    .dow-badge.fri {
+      background: var(--amber-100);
+      color: var(--amber-800);
+    }
+
+    .card-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* Offline Weather Notice in Card */
+    .offline-weather-card-notice {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 11px;
+      color: #64748b;
+      text-align: center;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .progress-bar-bg {
+      background: var(--slate-200);
+      height: 6px;
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 8px 0;
+    }
+    .progress-bar-fill {
+      background: var(--primary);
+      height: 100%;
+      border-radius: 9999px;
+    }
+    .is-top .progress-bar-fill {
+      background: #0284c7;
+    }
+
+    .voter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .voter-chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      color: var(--slate-700);
+    }
+
+    /* Matrix View */
+    .matrix-container {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    table.matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+      min-width: 600px;
+    }
+    table.matrix-table th, table.matrix-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--slate-200);
+    }
+    table.matrix-table th {
+      background: var(--slate-50);
+      font-weight: 700;
+      color: var(--slate-700);
+    }
+    table.matrix-table tr:hover td {
+      background: var(--slate-50);
+    }
+    .cell-center { text-align: center; }
+    .badge-check {
+      width: 22px;
+      height: 22px;
+      background: var(--emerald-100);
+      color: var(--emerald-700);
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .badge-cross {
+      width: 22px;
+      height: 22px;
+      background: var(--slate-100);
+      color: var(--slate-400);
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+    }
+
+    /* Members View */
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .member-card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .member-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 550px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--slate-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h3 {
+      font-size: 17px;
+      font-weight: 700;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .modal-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--slate-200);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      background: var(--slate-50);
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--slate-700);
+      margin-bottom: 6px;
+    }
+
+    .date-toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .date-toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border: 1px solid var(--slate-200);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .date-toggle-item.selected {
+      background: var(--primary-light);
+      border-color: var(--primary);
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 100;
+    }
+    .toast {
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      animation: toastIn 0.2s ease forwards;
+    }
+    @keyframes toastIn {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .btn-secondary {
+      background: #fff;
+      border: 1px solid var(--slate-300);
+      color: var(--slate-700);
+      font-weight: 600;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 8px;
+    }
+    .btn-secondary:hover { background: var(--slate-100); }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    /* SVG Icon Helpers */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke-width: 2;
+      stroke: currentColor;
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Offline Banner -->
+  <div class="offline-banner">
+    <span>🔒 <strong>내부망 전용 Standalone 모드</strong>: 외부 인터넷 연결 및 CDN·폰트·API 통신이 일체 차단된 폐쇄망 환경에서도 100% 정상 작동합니다.</span>
+    <span class="offline-badge-pill">로컬 브라우저 저장</span>
+  </div>
+
+  <!-- Navigation Header -->
+  <header>
+    <div class="container nav-inner">
+      <div class="brand">
+        <div class="brand-icon">🍻</div>
+        <div class="brand-text">
+          <h1>모두의 회식 (내부망 ver)</h1>
+          <span>회사 내부망 PC 전용 독립 실행 파일</span>
+        </div>
+      </div>
+
+      <!-- View Switcher -->
+      <nav class="view-tabs">
+        <button class="tab-btn active" id="tab-calendar" onclick="switchView('calendar')">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          주간 캘린더
+        </button>
+        <button class="tab-btn" id="tab-matrix" onclick="switchView('matrix')">
+          <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"></rect><path d="M3 9h18M3 15h18M9 3v18M15 3v18"></path></svg>
+          종합 매트릭스 표
+        </button>
+        <button class="tab-btn" id="tab-members" onclick="switchView('members')">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          참여자 목록 (<span id="nav-voter-count">0</span>)
+        </button>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="nav-actions">
+        <!-- Weather Info Notice Tag -->
+        <span style="font-size: 11px; font-weight: 600; background: #f1f5f9; color: #64748b; padding: 4px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          저녁 날씨: 내부망 판에서는 쓸 수 없음
+        </span>
+
+        <button class="icon-btn" onclick="openShareModal()" title="공지 텍스트 복사">
+          <svg class="icon" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+        </button>
+        <button class="icon-btn" onclick="openJsonModal()" title="데이터 백업 및 초기화">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        </button>
+
+        <!-- Role Switcher -->
+        <button class="role-toggle" id="role-toggle-btn" onclick="toggleRole()">
+          <span id="role-icon">👤</span>
+          <span id="role-text">팀원 모드</span>
+        </button>
+
+        <!-- Vote CTA Button -->
+        <button class="vote-cta-btn" onclick="openVoteModal()">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          투표하기
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="container" style="flex: 1; padding-bottom: 48px;">
+    <!-- Hero / Poll Summary Card -->
+    <div class="hero-card">
+      <div class="hero-top">
+        <div class="hero-title-area">
+          <h2 id="hero-title">10월 2주차 팀 정기 회식 일정 조율 🍗🍻</h2>
+          <p class="hero-desc" id="hero-desc">3분기 프로젝트 성공적 런칭 축하 및 신규 입사자 환영 회식입니다! 가능한 날짜를 모두 선택해주세요. (다중 선택 가능)</p>
+          <div class="hero-meta">
+            <span><strong>주최:</strong> <span id="hero-organizer">김총무 (피플팀)</span></span>
+            <span><strong>장소/시간:</strong> <span id="hero-location">18:30 / 신논현 맛집거리</span></span>
+            <span><strong>마감일:</strong> <span id="hero-deadline">2026-10-06 18:00</span></span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn-secondary" id="admin-panel-btn" style="display: none;" onclick="openAdminModal()">
+            <svg class="icon" viewBox="0 0 24 24" style="margin-right: 4px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            총무 관리자 설정
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">참여 투표 인원</div>
+          <div class="stat-value"><span id="stat-total-voters">0</span>명</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">현재 최다 득표일 (1위)</div>
+          <div class="stat-value" id="stat-top-date">-</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">최종 확정 일정</div>
+          <div class="stat-value" id="stat-confirmed-date" style="color: #059669;">미확정 (투표 중)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">저녁 날씨 연동</div>
+          <div class="stat-value" style="font-size: 13px; color: #64748b;">내부망 판에서는 쓸 수 없음</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View 1: Calendar View -->
+    <div id="view-calendar">
+      <div class="toolbar">
+        <div class="week-nav">
+          <button class="nav-pill" onclick="shiftWeek(-7)">&lt; 이전 주</button>
+          <span style="font-weight: 700; font-size: 14px;" id="current-week-label">10월 2주차</span>
+          <button class="nav-pill" onclick="shiftWeek(7)">다음 주 &gt;</button>
+          <button class="nav-pill" onclick="resetToCurrentWeek()" style="font-size: 11px;">기본 주차</button>
+        </div>
+        <span style="font-size: 12px; color: #64748b;">* 날짜 카드를 누르면 상세 참여자 명단을 볼 수 있습니다.</span>
+      </div>
+
+      <div class="calendar-grid" id="calendar-cards-container">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- View 2: Matrix View -->
+    <div id="view-matrix" style="display: none;">
+      <div class="toolbar">
+        <h3 style="font-size: 15px; font-weight: 700;">종합 참여 매트릭스 표</h3>
+        <span style="font-size: 12px; color: #64748b;">팀원별 가능 날짜 및 메뉴 선호도 종합</span>
+      </div>
+      <div class="matrix-container" id="matrix-container">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+
+    <!-- View 3: Members View -->
+    <div id="view-members" style="display: none;">
+      <div class="toolbar">
+        <h3 style="font-size: 15px; font-weight: 700;">참여자별 개별 현황</h3>
+      </div>
+      <div class="members-grid" id="members-container">
+        <!-- Rendered via JS -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Vote Modal -->
+  <div class="modal-overlay" id="vote-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="vote-modal-title">팀 회식 일정 투표하기</h3>
+        <button class="icon-btn" onclick="closeVoteModal()">✕</button>
+      </div>
+      <form onsubmit="handleVoteSubmit(event)">
+        <div class="modal-body">
+          <input type="hidden" id="vote-existing-id" value="">
+          <div class="form-group">
+            <label for="vote-name">이름 (필수)</label>
+            <input type="text" id="vote-name" required placeholder="예: 김민준" style="width: 100%;">
+          </div>
+          <div class="form-group">
+            <label for="vote-dept">소속 / 역할 (선택)</label>
+            <input type="text" id="vote-dept" placeholder="예: 개발팀 / 백엔드" style="width: 100%;">
+          </div>
+          <div class="form-group">
+            <label>참여 가능한 날짜 선택 (다중 선택 가능)</label>
+            <div class="date-toggle-list" id="vote-candidate-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="vote-menu">선호 메뉴 (선택)</label>
+            <select id="vote-menu" style="width: 100%;">
+              <option value="상관없음">상관없음 (모두 좋아요)</option>
+              <option value="삼겹살">삼겹살 / 돼지고기</option>
+              <option value="소고기">소고기 / 한우</option>
+              <option value="회/해산물">회 / 해산물</option>
+              <option value="치킨/맥주">치킨 & 맥주</option>
+              <option value="양식/피자">양식 (스테이크/파스타)</option>
+              <option value="중식">중식 / 양꼬치</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="vote-note">비고 및 코멘트 (선택)</label>
+            <textarea id="vote-note" rows="2" placeholder="예: 목요일은 19시 이후 참석 가능합니다!" style="width: 100%;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeVoteModal()">취소</button>
+          <button type="submit" class="btn-primary" id="vote-submit-btn">투표 제출하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Date Detail Modal -->
+  <div class="modal-overlay" id="date-detail-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="detail-date-title">10/8 (목) 상세 참여 현황</h3>
+        <button class="icon-btn" onclick="closeDetailModal()">✕</button>
+      </div>
+      <div class="modal-body" id="detail-date-body">
+        <!-- Rendered via JS -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeDetailModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Modal -->
+  <div class="modal-overlay" id="admin-modal">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>총무 관리자 설정</h3>
+        <button class="icon-btn" onclick="closeAdminModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>회식 투표 제목</label>
+          <input type="text" id="admin-title" style="width: 100%;">
+        </div>
+        <div class="form-group">
+          <label>설명 및 공지</label>
+          <textarea id="admin-desc" rows="2" style="width: 100%;"></textarea>
+        </div>
+        <div class="form-group">
+          <label>총무/주최자</label>
+          <input type="text" id="admin-organizer" style="width: 100%;">
+        </div>
+        <div class="form-group">
+          <label>투표 마감 일시</label>
+          <input type="datetime-local" id="admin-deadline" style="width: 100%;">
+        </div>
+        <div class="form-group">
+          <label>주간 후보 날짜 활성화 (선택된 날짜만 투표 가능)</label>
+          <div class="date-toggle-list" id="admin-candidate-toggles">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+        <div class="form-group" style="padding-top: 12px; border-top: 1px solid #e2e8f0;">
+          <label>최종 확정 날짜 지정</label>
+          <select id="admin-confirm-date-select" style="width: 100%;">
+            <!-- Rendered via JS -->
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeAdminModal()">취소</button>
+        <button type="button" class="btn-primary" onclick="saveAdminSettings()">설정 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share / Announcement Modal -->
+  <div class="modal-overlay" id="share-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>팀 공지 텍스트 복사 (슬랙/카톡)</h3>
+        <button class="icon-btn" onclick="closeShareModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">아래 텍스트를 복사하여 메신저에 붙여넣으세요.</p>
+        <textarea id="share-text-area" rows="8" readonly style="width: 100%; font-family: monospace; font-size: 12px;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeShareModal()">닫기</button>
+        <button type="button" class="btn-primary" onclick="copyShareText()">클립보드 복사</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JSON Backup / Reset Modal -->
+  <div class="modal-overlay" id="json-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>데이터 백업 & 초기화 (로컬 저장소)</h3>
+        <button class="icon-btn" onclick="closeJsonModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: #64748b; margin-bottom: 10px;">
+          내부망에서는 데이터가 이 브라우저의 <strong>localStorage</strong>에 안전하게 보관됩니다.
+          JSON 파일로 내보내거나 가져올 수 있습니다.
+        </p>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+          <button class="btn-secondary" onclick="exportDataJson()">JSON 내보내기 (다운로드)</button>
+          <button class="btn-secondary" onclick="resetToInitialData()" style="color: #e11d48;">초기 상태로 리셋</button>
+        </div>
+        <div class="form-group">
+          <label>JSON 데이터 직접 붙여넣어 복원하기</label>
+          <textarea id="import-json-area" rows="5" placeholder='{"config": ..., "votes": ...}' style="width: 100%; font-family: monospace; font-size: 11px;"></textarea>
+          <button class="btn-primary" style="margin-top: 8px;" onclick="importDataJson()">가져오기 적용</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="closeJsonModal()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Pure Self-Contained JavaScript Logic (Zero External Calls) -->
+  <script>
+    // Initial Default Data (Exact match with current app state)
+    const DEFAULT_CONFIG = {
+      id: "poll-oct-dinner",
+      title: "10월 2주차 팀 정기 회식 일정 조율 🍗🍻",
+      description: "3분기 프로젝트 성공적 런칭 축하 및 신규 입사자 환영 회식입니다! 가능한 날짜를 모두 선택해주세요. (다중 선택 가능)",
+      organizer: "김총무 (피플팀)",
+      weekStartDate: "2026-10-05",
+      candidateDates: ["2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"],
+      confirmedDate: null,
+      confirmedTimeLocation: "18:30 / 신논현 맛집거리",
+      deadline: "2026-10-06T18:00",
+      status: "active",
+      round: 1
+    };
+
+    const DEFAULT_VOTES = [
+      {
+        id: "voter-1",
+        name: "김민준",
+        department: "Tech Lead",
+        selectedDates: ["2026-10-07", "2026-10-08", "2026-10-09"],
+        note: "목요일이 제일 여유롭습니다!",
+        preferredMenu: "소고기",
+        updatedAt: "2026-09-30T10:15:00"
+      },
+      {
+        id: "voter-2",
+        name: "이서연",
+        department: "Product Designer",
+        selectedDates: ["2026-10-06", "2026-10-08"],
+        note: "수요일은 야간 배포 서포트라 목요일 희망해요",
+        preferredMenu: "삼겹살",
+        updatedAt: "2026-09-30T11:20:00"
+      },
+      {
+        id: "voter-3",
+        name: "박도현",
+        department: "Backend Dev",
+        selectedDates: ["2026-10-07", "2026-10-08", "2026-10-09"],
+        note: "목/금 모두 좋습니다! 고기 환영",
+        preferredMenu: "삼겹살",
+        updatedAt: "2026-09-30T13:05:00"
+      },
+      {
+        id: "voter-4",
+        name: "정유진",
+        department: "Frontend Dev",
+        selectedDates: ["2026-10-08", "2026-10-09"],
+        note: "목요일은 19시 조금 늦게 합류 가능합니다",
+        preferredMenu: "회/해산물",
+        updatedAt: "2026-09-30T14:40:00"
+      },
+      {
+        id: "voter-5",
+        name: "최현우",
+        department: "PM",
+        selectedDates: ["2026-10-06", "2026-10-07", "2026-10-08"],
+        note: "금요일은 타팀 미팅 일정이 있어요",
+        preferredMenu: "상관없음",
+        updatedAt: "2026-09-30T15:10:00"
+      },
+      {
+        id: "voter-6",
+        name: "송지아",
+        department: "QA Engineer",
+        selectedDates: ["2026-10-08"],
+        note: "목요일 대찬성입니다!",
+        preferredMenu: "소고기",
+        updatedAt: "2026-09-30T16:00:00"
+      },
+      {
+        id: "voter-7",
+        name: "윤성호",
+        department: "인프라",
+        selectedDates: ["2026-10-08"],
+        preferredMenu: "소고기",
+        updatedAt: "2026-10-01T06:18:49"
+      },
+      {
+        id: "voter-8",
+        name: "이순신",
+        department: "대한민국/장군",
+        selectedDates: [],
+        preferredMenu: "회/해산물",
+        updatedAt: "2026-10-01T06:39:53"
+      }
+    ];
+
+    const STORAGE_KEY = "offline_dinner_poll_data_v1";
+
+    // Application State
+    let appState = {
+      config: JSON.parse(JSON.stringify(DEFAULT_CONFIG)),
+      votes: JSON.parse(JSON.stringify(DEFAULT_VOTES)),
+      role: "voter", // 'voter' | 'admin'
+      viewMode: "calendar", // 'calendar' | 'matrix' | 'members'
+      currentWeekMonday: DEFAULT_CONFIG.weekStartDate,
+      selectedVoteDates: []
+    };
+
+    // Load State from LocalStorage
+    function loadState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.config && Array.isArray(parsed.votes)) {
+            appState.config = parsed.config;
+            appState.votes = parsed.votes;
+            appState.currentWeekMonday = parsed.config.weekStartDate || DEFAULT_CONFIG.weekStartDate;
+          }
+        }
+      } catch (e) {
+        console.warn("Storage load fallback:", e);
+      }
+    }
+
+    // Save State to LocalStorage
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          config: appState.config,
+          votes: appState.votes,
+          savedAt: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.warn("Storage save error:", e);
+      }
+    }
+
+    // Date Utilities (Pure Local Math)
+    const DOW_KOREAN = ['일', '월', '화', '수', '목', '금', '토'];
+
+    function parseISODate(dateStr) {
+      const parts = dateStr.split('-');
+      return new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    }
+
+    function formatShortDate(dateStr) {
+      const d = parseISODate(dateStr);
+      return (d.getMonth() + 1) + '/' + d.getDate();
+    }
+
+    function getDayOfWeek(dateStr) {
+      const d = parseISODate(dateStr);
+      return DOW_KOREAN[d.getDay()];
+    }
+
+    function getWeekDates(mondayStr) {
+      const d = parseISODate(mondayStr);
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const cur = new Date(d);
+        cur.setDate(d.getDate() + i);
+        const y = cur.getFullYear();
+        const m = String(cur.getMonth() + 1).padStart(2, '0');
+        const day = String(cur.getDate()).padStart(2, '0');
+        dates.push(`${y}-${m}-${day}`);
+      }
+      return dates;
+    }
+
+    // View Switching
+    function switchView(mode) {
+      appState.viewMode = mode;
+      document.getElementById('tab-calendar').classList.toggle('active', mode === 'calendar');
+      document.getElementById('tab-matrix').classList.toggle('active', mode === 'matrix');
+      document.getElementById('tab-members').classList.toggle('active', mode === 'members');
+
+      document.getElementById('view-calendar').style.display = mode === 'calendar' ? 'block' : 'none';
+      document.getElementById('view-matrix').style.display = mode === 'matrix' ? 'block' : 'none';
+      document.getElementById('view-members').style.display = mode === 'members' ? 'block' : 'none';
+
+      if (mode === 'matrix') renderMatrix();
+      if (mode === 'members') renderMembers();
+    }
+
+    // Role Switching
+    function toggleRole() {
+      appState.role = appState.role === 'admin' ? 'voter' : 'admin';
+      const btn = document.getElementById('role-toggle-btn');
+      const icon = document.getElementById('role-icon');
+      const text = document.getElementById('role-text');
+      const adminBtn = document.getElementById('admin-panel-btn');
+
+      if (appState.role === 'admin') {
+        btn.classList.add('admin');
+        icon.textContent = '👑';
+        text.textContent = '총무 관리자 모드';
+        adminBtn.style.display = 'inline-flex';
+        showToast('총무 관리자 모드로 전환되었습니다.');
+      } else {
+        btn.classList.remove('admin');
+        icon.textContent = '👤';
+        text.textContent = '팀원 모드';
+        adminBtn.style.display = 'none';
+        showToast('일반 팀원 모드로 전환되었습니다.');
+      }
+      renderAll();
+    }
+
+    // Week Shift
+    function shiftWeek(offsetDays) {
+      const d = parseISODate(appState.currentWeekMonday);
+      d.setDate(d.getDate() + offsetDays);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      appState.currentWeekMonday = `${y}-${m}-${day}`;
+      renderCalendar();
+    }
+
+    function resetToCurrentWeek() {
+      appState.currentWeekMonday = appState.config.weekStartDate;
+      renderCalendar();
+    }
+
+    // Toast Utility
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    // Compute Summaries
+    function computeSummaries() {
+      const weekDates = getWeekDates(appState.currentWeekMonday);
+      const totalVoters = appState.votes.length;
+
+      let maxCount = -1;
+      let topDate = null;
+
+      const dateMap = {};
+      weekDates.forEach(date => {
+        const isCandidate = appState.config.candidateDates.includes(date);
+        const attendees = appState.votes.filter(v => v.selectedDates.includes(date));
+        const absentees = appState.votes.filter(v => !v.selectedDates.includes(date));
+        const count = attendees.length;
+        const percentage = totalVoters > 0 ? Math.round((count / totalVoters) * 100) : 0;
+
+        if (isCandidate && count > maxCount) {
+          maxCount = count;
+          topDate = date;
+        }
+
+        dateMap[date] = {
+          date,
+          dayOfWeek: getDayOfWeek(date),
+          isCandidate,
+          voterCount: count,
+          totalVoters,
+          percentage,
+          attendees,
+          absentees,
+          isConfirmed: appState.config.confirmedDate === date
+        };
+      });
+
+      return { weekDates, dateMap, topDate, maxCount, totalVoters };
+    }
+
+    // Render Calendar
+    function renderCalendar() {
+      const { weekDates, dateMap, topDate, totalVoters } = computeSummaries();
+
+      // Week label
+      const [mY, mM, mD] = appState.currentWeekMonday.split('-');
+      document.getElementById('current-week-label').textContent = `${parseInt(mM)}월 ${parseInt(mD)}일 주차`;
+
+      const container = document.getElementById('calendar-cards-container');
+      container.innerHTML = '';
+
+      weekDates.forEach(date => {
+        const item = dateMap[date];
+        const isTop = item.isCandidate && date === topDate && item.voterCount > 0;
+        const isFri = item.dayOfWeek === '금';
+
+        const card = document.createElement('div');
+        card.className = `day-card ${item.isCandidate ? 'is-candidate' : ''} ${isTop ? 'is-top' : ''} ${item.isConfirmed ? 'is-confirmed' : ''}`;
+        card.onclick = () => openDetailModal(date);
+
+        card.innerHTML = `
+          <div class="card-header">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="card-date">${formatShortDate(date)}</span>
+              <span class="dow-badge ${isFri ? 'fri' : ''}">${item.dayOfWeek}요일</span>
+            </div>
+            ${item.isConfirmed ? '<span style="font-size: 11px; font-weight: 700; color: #047857; background: #d1fae5; padding: 2px 6px; border-radius: 4px;">확정</span>' : (isTop ? '<span style="font-size: 11px; font-weight: 700; color: #0369a1; background: #e0f2fe; padding: 2px 6px; border-radius: 4px;">👑 1위</span>' : '')}
+          </div>
+
+          <div class="card-body">
+            <!-- Offline Weather Notice explicitly replacing external weather data -->
+            <div class="offline-weather-card-notice" title="외부 데이터 조회는 내부망에서 쓸 수 없습니다.">
+              <span>🔒 외부 날씨: 내부망 판에서는 쓸 수 없음</span>
+            </div>
+
+            ${item.isCandidate ? `
+              <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; font-weight: 700; color: #334155;">
+                <span>참여 가능</span>
+                <span><strong style="font-size: 15px; color: #0284c7;">${item.voterCount}</strong> / ${totalVoters}명 (${item.percentage}%)</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${item.percentage}%;"></div>
+              </div>
+
+              <div class="voter-chips">
+                ${item.attendees.map(a => `<span class="voter-chip">${escapeHtml(a.name)}</span>`).join('')}
+              </div>
+            ` : `
+              <div style="margin: auto 0; text-align: center; color: #94a3b8; font-size: 12px; padding: 16px 0;">
+                후보일 제외
+              </div>
+            `}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    // Render Matrix Table
+    function renderMatrix() {
+      const { weekDates, dateMap } = computeSummaries();
+      const candidates = weekDates.filter(d => appState.config.candidateDates.includes(d));
+      const container = document.getElementById('matrix-container');
+
+      let html = `
+        <table class="matrix-table">
+          <thead>
+            <tr>
+              <th style="min-width: 140px;">팀원 (소속)</th>
+              ${candidates.map(d => `
+                <th class="cell-center" style="min-width: 90px;">
+                  <div style="font-weight: 800;">${formatShortDate(d)}</div>
+                  <div style="font-size: 11px; color: #64748b; font-weight: 500;">(${getDayOfWeek(d)})</div>
+                </th>
+              `).join('')}
+              <th style="min-width: 120px;">선호 메뉴</th>
+              <th style="min-width: 180px;">비고 / 코멘트</th>
+              <th class="cell-center" style="width: 100px;">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+
+      appState.votes.forEach(v => {
+        html += `
+          <tr>
+            <td>
+              <strong>${escapeHtml(v.name)}</strong>
+              ${v.department ? `<div style="font-size: 11px; color: #64748b;">${escapeHtml(v.department)}</div>` : ''}
+            </td>
+            ${candidates.map(d => {
+              const can = v.selectedDates.includes(d);
+              return `<td class="cell-center">${can ? '<span class="badge-check">O</span>' : '<span class="badge-cross">X</span>'}</td>`;
+            }).join('')}
+            <td><span style="background: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-size: 12px;">${escapeHtml(v.preferredMenu || '상관없음')}</span></td>
+            <td style="font-size: 12px; color: #475569;">${escapeHtml(v.note || '-')}</td>
+            <td class="cell-center">
+              <button class="icon-btn" onclick="editVote('${v.id}')" title="수정">✏️</button>
+              <button class="icon-btn" onclick="deleteVote('${v.id}', '${escapeHtml(v.name)}')" title="삭제" style="color: #e11d48;">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      // Total summary row
+      html += `
+        <tr style="background: #f8fafc; font-weight: 700;">
+          <td>참여 가능 합계</td>
+          ${candidates.map(d => {
+            const count = dateMap[d] ? dateMap[d].voterCount : 0;
+            return `<td class="cell-center" style="color: #0284c7; font-size: 14px;">${count}명</td>`;
+          }).join('')}
+          <td colspan="3" style="font-size: 11px; color: #64748b;">(전체 ${appState.votes.length}명 참여)</td>
+        </tr>
+      `;
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    // Render Members
+    function renderMembers() {
+      const container = document.getElementById('members-container');
+      container.innerHTML = '';
+
+      appState.votes.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'member-card';
+        card.innerHTML = `
+          <div class="member-card-header">
+            <div>
+              <strong style="font-size: 15px;">${escapeHtml(v.name)}</strong>
+              ${v.department ? `<span style="font-size: 12px; color: #64748b; margin-left: 6px;">${escapeHtml(v.department)}</span>` : ''}
+            </div>
+            <div>
+              <button class="icon-btn" onclick="editVote('${v.id}')">✏️</button>
+              <button class="icon-btn" onclick="deleteVote('${v.id}', '${escapeHtml(v.name)}')" style="color: #e11d48;">🗑️</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 4px;">참여 가능 일정 (${v.selectedDates.length}일 선택):</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+              ${v.selectedDates.length > 0 ? v.selectedDates.map(d => `
+                <span style="font-size: 11px; font-weight: 600; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px;">
+                  ${formatShortDate(d)} (${getDayOfWeek(d)})
+                </span>
+              `).join('') : '<span style="font-size: 12px; color: #94a3b8;">가능한 일정이 없습니다.</span>'}
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; border-top: 1px solid #f1f5f9; padding-top: 8px;">
+            <span>선호 메뉴: <strong>${escapeHtml(v.preferredMenu || '상관없음')}</strong></span>
+            <span style="color: #94a3b8;">${v.note ? '💬 ' + escapeHtml(v.note) : ''}</span>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Render Hero & Stats
+    function renderHero() {
+      const { topDate, maxCount, totalVoters } = computeSummaries();
+      document.getElementById('hero-title').textContent = appState.config.title;
+      document.getElementById('hero-desc').textContent = appState.config.description;
+      document.getElementById('hero-organizer').textContent = appState.config.organizer;
+      document.getElementById('hero-location').textContent = appState.config.confirmedTimeLocation;
+      document.getElementById('hero-deadline').textContent = appState.config.deadline.replace('T', ' ');
+
+      document.getElementById('stat-total-voters').textContent = totalVoters;
+      document.getElementById('nav-voter-count').textContent = totalVoters;
+
+      if (topDate && maxCount > 0) {
+        document.getElementById('stat-top-date').textContent = `${formatShortDate(topDate)} (${getDayOfWeek(topDate)}) - ${maxCount}명`;
+      } else {
+        document.getElementById('stat-top-date').textContent = '후보일 없음';
+      }
+
+      const confEl = document.getElementById('stat-confirmed-date');
+      if (appState.config.confirmedDate) {
+        confEl.textContent = `🎉 ${formatShortDate(appState.config.confirmedDate)} (${getDayOfWeek(appState.config.confirmedDate)}) 확정!`;
+        confEl.style.color = '#059669';
+      } else {
+        confEl.textContent = '미확정 (투표 중)';
+        confEl.style.color = '#d97706';
+      }
+    }
+
+    function renderAll() {
+      renderHero();
+      renderCalendar();
+      if (appState.viewMode === 'matrix') renderMatrix();
+      if (appState.viewMode === 'members') renderMembers();
+    }
+
+    // Vote Modal Operations
+    function openVoteModal(existingVote = null) {
+      document.getElementById('vote-existing-id').value = existingVote ? existingVote.id : '';
+      document.getElementById('vote-modal-title').textContent = existingVote ? `${existingVote.name}님의 투표 수정` : '팀 회식 일정 투표하기';
+      document.getElementById('vote-name').value = existingVote ? existingVote.name : '';
+      document.getElementById('vote-dept').value = existingVote ? (existingVote.department || '') : '';
+      document.getElementById('vote-menu').value = existingVote ? (existingVote.preferredMenu || '상관없음') : '상관없음';
+      document.getElementById('vote-note').value = existingVote ? (existingVote.note || '') : '';
+
+      appState.selectedVoteDates = existingVote ? [...existingVote.selectedDates] : [];
+
+      // Render candidates list in modal
+      const listEl = document.getElementById('vote-candidate-list');
+      listEl.innerHTML = '';
+
+      appState.config.candidateDates.forEach(date => {
+        const isSelected = appState.selectedVoteDates.includes(date);
+        const item = document.createElement('div');
+        item.className = `date-toggle-item ${isSelected ? 'selected' : ''}`;
+        item.onclick = () => {
+          if (appState.selectedVoteDates.includes(date)) {
+            appState.selectedVoteDates = appState.selectedVoteDates.filter(d => d !== date);
+          } else {
+            appState.selectedVoteDates.push(date);
+          }
+          item.classList.toggle('selected');
+        };
+        item.innerHTML = `
+          <div>
+            <strong style="font-size: 14px;">${formatShortDate(date)}</strong>
+            <span style="font-size: 12px; color: #64748b; margin-left: 4px;">(${getDayOfWeek(date)}요일)</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 700;">${isSelected ? '선택됨 ✓' : '가능 시 선택'}</span>
+        `;
+        listEl.appendChild(item);
+      });
+
+      document.getElementById('vote-modal').classList.add('active');
+    }
+
+    function closeVoteModal() {
+      document.getElementById('vote-modal').classList.remove('active');
+    }
+
+    function handleVoteSubmit(e) {
+      e.preventDefault();
+      const existingId = document.getElementById('vote-existing-id').value;
+      const name = document.getElementById('vote-name').value.trim();
+      const dept = document.getElementById('vote-dept').value.trim();
+      const menu = document.getElementById('vote-menu').value;
+      const note = document.getElementById('vote-note').value.trim();
+
+      if (!name) return;
+
+      const now = new Date().toISOString();
+
+      if (existingId) {
+        const idx = appState.votes.findIndex(v => v.id === existingId);
+        if (idx >= 0) {
+          appState.votes[idx] = {
+            ...appState.votes[idx],
+            name,
+            department: dept,
+            selectedDates: [...appState.selectedVoteDates],
+            preferredMenu: menu,
+            note,
+            updatedAt: now
+          };
+        }
+      } else {
+        appState.votes.push({
+          id: 'voter-' + Date.now(),
+          name,
+          department: dept,
+          selectedDates: [...appState.selectedVoteDates],
+          preferredMenu: menu,
+          note,
+          updatedAt: now
+        });
+      }
+
+      saveState();
+      closeVoteModal();
+      renderAll();
+      showToast(`🎉 ${name}님의 투표가 브라우저에 저장되었습니다!`);
+    }
+
+    function editVote(id) {
+      const v = appState.votes.find(vote => vote.id === id);
+      if (v) openVoteModal(v);
+    }
+
+    function deleteVote(id, name) {
+      if (confirm(`정말 ${name}님의 투표 기록을 삭제하시겠습니까?`)) {
+        appState.votes = appState.votes.filter(v => v.id !== id);
+        saveState();
+        renderAll();
+        showToast(`${name}님의 투표가 삭제되었습니다.`);
+      }
+    }
+
+    // Detail Modal
+    function openDetailModal(date) {
+      const { dateMap } = computeSummaries();
+      const item = dateMap[date];
+      if (!item) return;
+
+      document.getElementById('detail-date-title').textContent = `${formatShortDate(date)} (${item.dayOfWeek}요일) 상세 현황`;
+      const body = document.getElementById('detail-date-body');
+
+      body.innerHTML = `
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 14px; font-weight: 700; color: #0284c7;">
+            참여 가능자 (${item.attendees.length}명)
+          </div>
+          <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 6px;">
+            ${item.attendees.map(a => `
+              <div style="background: #f8fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 13px;">
+                <strong>${escapeHtml(a.name)}</strong>
+                <span style="font-size: 11px; color: #64748b; margin-left: 6px;">[${escapeHtml(a.department || '팀원')}]</span>
+                <span style="margin-left: 8px; font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 1px 6px; border-radius: 4px;">${escapeHtml(a.preferredMenu || '상관없음')}</span>
+                ${a.note ? `<div style="font-size: 12px; color: #475569; margin-top: 4px;">💬 ${escapeHtml(a.note)}</div>` : ''}
+              </div>
+            `).join('') || '<div style="color: #94a3b8; font-size: 13px;">아직 참여 가능한 인원이 없습니다.</div>'}
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #64748b;">
+            불참 또는 미응답 (${item.absentees.length}명)
+          </div>
+          <div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px;">
+            ${item.absentees.map(a => `<span class="voter-chip" style="color: #94a3b8;">${escapeHtml(a.name)}</span>`).join('')}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('date-detail-modal').classList.add('active');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('date-detail-modal').classList.remove('active');
+    }
+
+    // Admin Modal
+    function openAdminModal() {
+      document.getElementById('admin-title').value = appState.config.title;
+      document.getElementById('admin-desc').value = appState.config.description;
+      document.getElementById('admin-organizer').value = appState.config.organizer;
+      document.getElementById('admin-deadline').value = appState.config.deadline;
+
+      const weekDates = getWeekDates(appState.config.weekStartDate);
+      const toggleContainer = document.getElementById('admin-candidate-toggles');
+      toggleContainer.innerHTML = '';
+
+      weekDates.forEach(date => {
+        const isCandidate = appState.config.candidateDates.includes(date);
+        const item = document.createElement('div');
+        item.className = `date-toggle-item ${isCandidate ? 'selected' : ''}`;
+        item.onclick = () => {
+          if (appState.config.candidateDates.includes(date)) {
+            appState.config.candidateDates = appState.config.candidateDates.filter(d => d !== date);
+          } else {
+            appState.config.candidateDates.push(date);
+          }
+          item.classList.toggle('selected');
+          updateConfirmSelectOptions();
+        };
+        item.innerHTML = `
+          <div>
+            <strong>${formatShortDate(date)}</strong>
+            <span style="font-size: 12px; color: #64748b;">(${getDayOfWeek(date)}요일)</span>
+          </div>
+          <span style="font-size: 12px; font-weight: 700;">${isCandidate ? '활성화 (후보일)' : '제외됨'}</span>
+        `;
+        toggleContainer.appendChild(item);
+      });
+
+      updateConfirmSelectOptions();
+      document.getElementById('admin-modal').classList.add('active');
+    }
+
+    function updateConfirmSelectOptions() {
+      const select = document.getElementById('admin-confirm-date-select');
+      select.innerHTML = '<option value="">미확정 (투표 진행 중)</option>';
+      appState.config.candidateDates.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = `${formatShortDate(d)} (${getDayOfWeek(d)}요일)`;
+        if (appState.config.confirmedDate === d) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
+    function closeAdminModal() {
+      document.getElementById('admin-modal').classList.remove('active');
+    }
+
+    function saveAdminSettings() {
+      appState.config.title = document.getElementById('admin-title').value.trim();
+      appState.config.description = document.getElementById('admin-desc').value.trim();
+      appState.config.organizer = document.getElementById('admin-organizer').value.trim();
+      appState.config.deadline = document.getElementById('admin-deadline').value;
+      appState.config.confirmedDate = document.getElementById('admin-confirm-date-select').value || null;
+
+      saveState();
+      closeAdminModal();
+      renderAll();
+      showToast('총무 관리자 설정이 저장되었습니다.');
+    }
+
+    // Share / Announcement Modal
+    function openShareModal() {
+      const { topDate, maxCount, totalVoters } = computeSummaries();
+      const text = `[팀 회식 일정 투표 현황 안내 🍗🍻]
+- 행사명: ${appState.config.title}
+- 주최/총무: ${appState.config.organizer}
+- 현재 참여 인원: 총 ${totalVoters}명
+- 1위 추천 일자: ${topDate ? formatShortDate(topDate) + ' (' + getDayOfWeek(topDate) + '요일) - ' + maxCount + '명 참여 가능' : '집계 중'}
+- 최종 확정 상태: ${appState.config.confirmedDate ? formatShortDate(appState.config.confirmedDate) + ' (' + getDayOfWeek(appState.config.confirmedDate) + '요일) 최종 확정!' : '투표 진행 중 (마감: ' + appState.config.deadline.replace('T', ' ') + ')'}
+
+* 사내 내부망 회식 조율 파일에서 참석 가능한 일정을 투표해 주세요!`;
+
+      document.getElementById('share-text-area').value = text;
+      document.getElementById('share-modal').classList.add('active');
+    }
+
+    function closeShareModal() {
+      document.getElementById('share-modal').classList.remove('active');
+    }
+
+    function copyShareText() {
+      const area = document.getElementById('share-text-area');
+      area.select();
+      navigator.clipboard.writeText(area.value).then(() => {
+        showToast('공지 텍스트가 클립보드에 복사되었습니다.');
+        closeShareModal();
+      });
+    }
+
+    // JSON Backup Modal
+    function openJsonModal() {
+      document.getElementById('import-json-area').value = '';
+      document.getElementById('json-modal').classList.add('active');
+    }
+
+    function closeJsonModal() {
+      document.getElementById('json-modal').classList.remove('active');
+    }
+
+    function exportDataJson() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+        config: appState.config,
+        votes: appState.votes
+      }, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `dinner_poll_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('JSON 백업 파일이 다운로드되었습니다.');
+    }
+
+    function importDataJson() {
+      const text = document.getElementById('import-json-area').value.trim();
+      if (!text) return;
+      try {
+        const parsed = JSON.parse(text);
+        if (parsed.config && Array.isArray(parsed.votes)) {
+          appState.config = parsed.config;
+          appState.votes = parsed.votes;
+          saveState();
+          closeJsonModal();
+          renderAll();
+          showToast('JSON 데이터가 성공적으로 복원되었습니다.');
+        } else {
+          alert('올바른 데이터 형식이 아닙니다. {config, votes} 구조여야 합니다.');
+        }
+      } catch (err) {
+        alert('JSON 파싱 오류가 발생했습니다.');
+      }
+    }
+
+    function resetToInitialData() {
+      if (confirm('현재 입력된 모든 투표 데이터를 초기 상태로 리셋하시겠습니까?')) {
+        appState.config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+        appState.votes = JSON.parse(JSON.stringify(DEFAULT_VOTES));
+        saveState();
+        closeJsonModal();
+        renderAll();
+        showToast('초기 기본 데이터로 리셋되었습니다.');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Initialize on Page Load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderAll();
+    });
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { UserRole, ViewMode } from '../types';
+import { downloadOfflineHtml } from '../utils/downloadOffline';
 import { 
   Users, 
   ShieldCheck, 
@@ -10,7 +11,8 @@ import {
   UserCheck, 
   FileJson,
   Plus,
-  CloudSun
+  CloudSun,
+  Download
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -135,6 +137,17 @@ export const Navbar: React.FC<NavbarProps> = ({
               className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <FileJson className="w-4 h-4" />
+            </button>
+
+            {/* Offline Version Download Button (Direct client-side blob download, zero server cookies needed) */}
+            <button
+              type="button"
+              onClick={downloadOfflineHtml}
+              title="인터넷이 없는 회사 내부망 PC에서도 열리는 단일 HTML 파일 내려받기"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors whitespace-nowrap shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-700" />
+              <span>내부망 ver 내려받기</span>
             </button>
 
             <div className="h-5 w-px bg-slate-200 mx-1 hidden sm:block" />
