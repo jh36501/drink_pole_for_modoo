@@ -1,0 +1,8 @@
+{
+  "name": "Remix 팀 회식 일정 투표 (Team Dinner Scheduler)",
+  "description": "팀원들의 참여 가능 일자를 수집하고 캘린더 뷰에서 실시간 집계 및 최다 참여일을 확인하는 팀 회식 일정 조율 웹 앱",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

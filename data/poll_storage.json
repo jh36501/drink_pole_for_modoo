@@ -1,0 +1,118 @@
+{
+  "config": {
+    "id": "poll-oct-dinner",
+    "title": "10월 2주차 팀 정기 회식 일정 조율 🍗🍻",
+    "description": "3분기 프로젝트 성공적 런칭 축하 및 신규 입사자 환영 회식입니다! 가능한 날짜를 모두 선택해주세요. (다중 선택 가능)",
+    "organizer": "김총무 (피플팀)",
+    "weekStartDate": "2026-10-05",
+    "candidateDates": [
+      "2026-10-06",
+      "2026-10-07",
+      "2026-10-08",
+      "2026-10-09"
+    ],
+    "confirmedDate": null,
+    "confirmedTimeLocation": "18:30 / 신논현 맛집거리",
+    "deadline": "2026-10-06T18:00",
+    "status": "active",
+    "round": 1,
+    "isRunoff": false,
+    "lastUpdated": "2026-10-01T06:18:44.196Z"
+  },
+  "votes": [
+    {
+      "id": "voter-1",
+      "name": "김민준",
+      "department": "Tech Lead",
+      "selectedDates": [
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09"
+      ],
+      "note": "목요일이 제일 여유롭습니다!",
+      "preferredMenu": "소고기",
+      "updatedAt": "2026-09-30T10:15:00"
+    },
+    {
+      "id": "voter-2",
+      "name": "이서연",
+      "department": "Product Designer",
+      "selectedDates": [
+        "2026-10-06",
+        "2026-10-08"
+      ],
+      "note": "수요일은 야간 배포 서포트라 목요일 희망해요",
+      "preferredMenu": "삼겹살",
+      "updatedAt": "2026-09-30T11:20:00"
+    },
+    {
+      "id": "voter-3",
+      "name": "박도현",
+      "department": "Backend Dev",
+      "selectedDates": [
+        "2026-10-07",
+        "2026-10-08",
+        "2026-10-09"
+      ],
+      "note": "목/금 모두 좋습니다! 고기 환영",
+      "preferredMenu": "삼겹살",
+      "updatedAt": "2026-09-30T13:05:00"
+    },
+    {
+      "id": "voter-4",
+      "name": "정유진",
+      "department": "Frontend Dev",
+      "selectedDates": [
+        "2026-10-08",
+        "2026-10-09"
+      ],
+      "note": "목요일은 19시 조금 늦게 합류 가능합니다",
+      "preferredMenu": "회/해산물",
+      "updatedAt": "2026-09-30T14:40:00"
+    },
+    {
+      "id": "voter-5",
+      "name": "최현우",
+      "department": "PM",
+      "selectedDates": [
+        "2026-10-06",
+        "2026-10-07",
+        "2026-10-08"
+      ],
+      "note": "금요일은 타팀 미팅 일정이 있어요",
+      "preferredMenu": "상관없음",
+      "updatedAt": "2026-09-30T15:10:00"
+    },
+    {
+      "id": "voter-6",
+      "name": "송지아",
+      "department": "QA Engineer",
+      "selectedDates": [
+        "2026-10-08"
+      ],
+      "note": "목요일 대찬성입니다!",
+      "preferredMenu": "소고기",
+      "updatedAt": "2026-09-30T16:00:00"
+    },
+    {
+      "id": "voter-1790835529970-cppd",
+      "name": "윤성호",
+      "department": "인프라",
+      "selectedDates": [
+        "2026-10-08"
+      ],
+      "preferredMenu": "소고기",
+      "updatedAt": "2026-10-01T06:18:49.969Z"
+    },
+    {
+      "id": "voter-1790836793344-8dly",
+      "name": "이순신",
+      "department": "대한민국/장군",
+      "selectedDates": [],
+      "preferredMenu": "회 / 해산물",
+      "updatedAt": "2026-10-01T06:39:53.344Z"
+    }
+  ],
+  "version": 4,
+  "lastModified": "2026-10-01T06:39:53.344Z"
+}
