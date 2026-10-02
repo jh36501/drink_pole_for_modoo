@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import type { Request, Response } from 'express';
 import fs from 'fs';
@@ -23,6 +24,7 @@ interface RegionMapping {
   aliases: string[];
   landCode: string;
   taCode: string;
+  stnId: string;
 }
 
 const REGION_MAP: Record<string, RegionMapping> = {
@@ -31,36 +33,42 @@ const REGION_MAP: Record<string, RegionMapping> = {
     aliases: ['서울', '신논현', '강남', '역삼', '선릉', '서초', '송파', '잠실', '종로', '여의도', '마포', '홍대', '성수', '판교', '분당', '수원', '경기', '인천'],
     landCode: '11B00000',
     taCode: '11B10101',
+    stnId: '108',
   },
   busan: {
     regName: '부산/경남',
     aliases: ['부산', '해운대', '서면', '광안리', '울산', '창원', '경남'],
     landCode: '11H20000',
     taCode: '11H20201',
+    stnId: '159',
   },
   daegu: {
     regName: '대구/경북',
     aliases: ['대구', '동성로', '경북', '구미', '포항'],
     landCode: '11H10000',
     taCode: '11H10701',
+    stnId: '143',
   },
   daejeon: {
     regName: '대전/세종/충남',
     aliases: ['대전', '유성', '세종', '충남', '천안'],
     landCode: '11C20000',
     taCode: '11C20401',
+    stnId: '133',
   },
   gwangju: {
     regName: '광주/전남',
     aliases: ['광주', '전남', '나주', '목포', '여수'],
     landCode: '11F20000',
     taCode: '11F20501',
+    stnId: '156',
   },
   jeju: {
     regName: '제주도',
     aliases: ['제주', '서귀포'],
     landCode: '11G00000',
     taCode: '11G00201',
+    stnId: '184',
   },
 };
 
@@ -88,38 +96,74 @@ function getDinnerTip(weatherText: string, temp: number, rainProb: number): stri
 
 const DOW_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 
+function getKmaTmFc(): string {
+  const now = new Date();
+  // KST: UTC + 9h
+  const kst = new Date(now.getTime() + 9 * 3600 * 1000);
+  const hour = kst.getUTCHours();
+  const base = new Date(kst);
+  let timeStr = '0600';
+  if (hour < 6) {
+    base.setUTCDate(base.getUTCDate() - 1);
+    timeStr = '1800';
+  } else if (hour < 18) {
+    timeStr = '0600';
+  } else {
+    timeStr = '1800';
+  }
+  const y = base.getUTCFullYear();
+  const m = String(base.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(base.getUTCDate()).padStart(2, '0');
+  return `${y}${m}${d}${timeStr}`;
+}
+
+const DEFAULT_KMA_API_KEY = 'UwTMv516Y0zIgZCDqzdPtf1jmbv287%2BOn1kqxcZizw8%2Be5OV5UmIc09icqMqSpEMbHOiCWoPK%2BZVD%2Bjbc%2BwgBg%3D%3D';
+
+interface ForecastResult {
+  items: DayWeatherInfo[];
+  outlookSummary?: string;
+}
+
 async function fetchMidForecast(
   targetWeekMonday: string,
   regionKey = 'seoul'
-): Promise<DayWeatherInfo[]> {
+): Promise<ForecastResult> {
   const region = REGION_MAP[regionKey] || REGION_MAP.seoul;
-  const apiKey = process.env.WEATHER_API_KEY || '';
+  const rawKey = (process.env.WEATHER_API_KEY || DEFAULT_KMA_API_KEY).trim();
+  const serviceKey = rawKey.includes('%') ? rawKey : encodeURIComponent(rawKey);
 
-  const baseDate = new Date('2026-10-01T00:00:00Z');
-  const tmFc = '202610010600';
+  const tmFc = getKmaTmFc();
+  const baseDate = new Date();
 
   let landItem: Record<string, any> = {};
   let taItem: Record<string, any> = {};
+  let outlookSummary = '';
 
-  if (apiKey) {
-    try {
-      const landUrl = `http://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${encodeURIComponent(apiKey)}&pageNo=1&numOfRows=1&dataType=JSON&regId=${region.landCode}&tmFc=${tmFc}`;
-      const taUrl = `http://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${encodeURIComponent(apiKey)}&pageNo=1&numOfRows=1&dataType=JSON&regId=${region.taCode}&tmFc=${tmFc}`;
+  try {
+    const fcstUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidFcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&stnId=${region.stnId || '108'}&tmFc=${tmFc}`;
+    const landUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidLandFcst?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&regId=${region.landCode}&tmFc=${tmFc}`;
+    const taUrl = `https://apis.data.go.kr/1360000/MidFcstInfoService/getMidTa?serviceKey=${serviceKey}&pageNo=1&numOfRows=10&dataType=JSON&regId=${region.taCode}&tmFc=${tmFc}`;
 
-      const [landRes, taRes] = await Promise.all([
-        fetch(landUrl, { signal: AbortSignal.timeout(3500) }).then((r) => r.json()).catch(() => null),
-        fetch(taUrl, { signal: AbortSignal.timeout(3500) }).then((r) => r.json()).catch(() => null),
-      ]);
+    const [fcstRes, landRes, taRes] = await Promise.all([
+      fetch(fcstUrl, { signal: AbortSignal.timeout(3500) }).then((r) => r.json()).catch(() => null),
+      fetch(landUrl, { signal: AbortSignal.timeout(3500) }).then((r) => r.json()).catch(() => null),
+      fetch(taUrl, { signal: AbortSignal.timeout(3500) }).then((r) => r.json()).catch(() => null),
+    ]);
 
-      if (landRes?.response?.header?.resultCode === '00') {
-        landItem = landRes.response?.body?.items?.item?.[0] || {};
+    if (fcstRes?.response?.header?.resultCode === '00') {
+      const item = fcstRes.response?.body?.items?.item?.[0] || {};
+      if (item.wfSv) {
+        outlookSummary = String(item.wfSv).trim();
       }
-      if (taRes?.response?.header?.resultCode === '00') {
-        taItem = taRes.response?.body?.items?.item?.[0] || {};
-      }
-    } catch (err) {
-      console.warn('Live KMA weather fetch failed, utilizing calibrated fallback:', err);
     }
+    if (landRes?.response?.header?.resultCode === '00') {
+      landItem = landRes.response?.body?.items?.item?.[0] || {};
+    }
+    if (taRes?.response?.header?.resultCode === '00') {
+      taItem = taRes.response?.body?.items?.item?.[0] || {};
+    }
+  } catch (err) {
+    console.warn('Live KMA weather fetch failed, utilizing calibrated fallback:', err);
   }
 
   const [y, m, d] = targetWeekMonday.split('-').map(Number);
@@ -181,18 +225,18 @@ async function fetchMidForecast(
     });
   }
 
-  return results;
+  return { items: results, outlookSummary };
 }
 
 async function searchWeather(
   query: string,
   targetWeekMonday: string
-): Promise<{ items: DayWeatherInfo[]; total: number; query: string }> {
+): Promise<{ items: DayWeatherInfo[]; outlookSummary?: string; total: number; query: string }> {
   const trimmed = query.trim().toLowerCase();
 
   if (!trimmed) {
-    const defaultList = await fetchMidForecast(targetWeekMonday, 'seoul');
-    return { items: defaultList, total: defaultList.length, query: '' };
+    const defaultData = await fetchMidForecast(targetWeekMonday, 'seoul');
+    return { items: defaultData.items, outlookSummary: defaultData.outlookSummary, total: defaultData.items.length, query: '' };
   }
 
   let matchedRegionKey = 'seoul';
@@ -209,7 +253,7 @@ async function searchWeather(
     }
   }
 
-  const allDays = await fetchMidForecast(targetWeekMonday, matchedRegionKey);
+  const { items: allDays, outlookSummary } = await fetchMidForecast(targetWeekMonday, matchedRegionKey);
 
   const filtered = allDays.filter((item) => {
     if (matchedRegionFound) return true;
@@ -230,6 +274,7 @@ async function searchWeather(
 
   return {
     items: filtered,
+    outlookSummary,
     total: filtered.length,
     query: trimmed,
   };
@@ -632,8 +677,8 @@ async function startServer() {
     try {
       const targetWeekMonday = (req.query.weekStartDate as string) || currentData.config.weekStartDate || '2026-10-05';
       const region = (req.query.region as string) || 'seoul';
-      const items = await fetchMidForecast(targetWeekMonday, region);
-      res.json({ success: true, items, targetWeekMonday, region });
+      const { items, outlookSummary } = await fetchMidForecast(targetWeekMonday, region);
+      res.json({ success: true, items, outlookSummary, targetWeekMonday, region });
     } catch (e: any) {
       console.error('Weather endpoint error:', e);
       res.status(500).json({ success: false, error: '날씨 조회 중 오류가 발생했습니다.' });

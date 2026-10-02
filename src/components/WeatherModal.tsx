@@ -30,6 +30,7 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
 }) => {
   const [query, setQuery] = useState('');
   const [weatherList, setWeatherList] = useState<DayWeatherInfo[]>([]);
+  const [outlookSummary, setOutlookSummary] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -47,6 +48,9 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
 
       if (data.success && Array.isArray(data.items)) {
         setWeatherList(data.items);
+        if (data.outlookSummary) {
+          setOutlookSummary(data.outlookSummary);
+        }
       } else {
         setWeatherList([]);
       }
@@ -182,6 +186,22 @@ export const WeatherModal: React.FC<WeatherModalProps> = ({
 
         {/* Table Body Area */}
         <div className="flex-1 overflow-auto p-4 sm:p-5">
+          {/* Official KMA Outlook Summary (getMidFcst 연동) */}
+          {outlookSummary && !isLoading && (
+            <div className="bg-sky-50/80 border border-sky-200/90 rounded-xl p-3 sm:p-3.5 text-xs text-sky-950 flex items-start gap-2.5 mb-4 shadow-2xs">
+              <Sparkles className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-sky-900">
+                  <span>기상청 공식 기상전망 (getMidFcst 연동)</span>
+                  <span className="text-[10px] bg-sky-200/70 text-sky-800 px-1.5 py-0.2 rounded font-semibold">실시간 공공데이터</span>
+                </div>
+                <p className="whitespace-pre-line text-slate-700 leading-relaxed font-normal">
+                  {outlookSummary}
+                </p>
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="py-16 text-center space-y-3">
               <RefreshCw className="w-8 h-8 text-sky-500 animate-spin mx-auto" />
